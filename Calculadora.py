@@ -176,7 +176,7 @@ class CalculadoraMonteCarlo(QWidget):
                 'tan': 'np.tan',
                 'log': 'np.log10',
                 'ln': 'np.log',
-                'e': 'np.exp',
+                'e': 'np.e',
                 'π': 'np.pi'
             }
             

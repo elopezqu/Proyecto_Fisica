@@ -1,10 +1,52 @@
 import sys
-import random
 import numpy as np
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QLineEdit, QPushButton, QLabel, QHBoxLayout, QSizePolicy, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QLineEdit, QPushButton, QLabel, QHBoxLayout, QSizePolicy, QMessageBox, QMainWindow
 from PyQt5.QtGui import QIcon, QFont, QDoubleValidator
 from PyQt5.QtCore import Qt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
+class GraficaWindow(QMainWindow):
+    def __init__(self, resultado, x_vals, y_vals, areas_estimadas):
+        super().__init__()
+        self.resultado = resultado
+        self.x_vals = x_vals
+        self.y_vals = y_vals
+        self.areas_estimadas = areas_estimadas
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Resultado y Gráfica')
+        self.setGeometry(100, 100, 800, 600)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+
+        resultado_label = QLabel(f"Resultado de la integral: {self.resultado}")
+        resultado_label.setAlignment(Qt.AlignCenter)
+        resultado_label.setFont(QFont("Arial", 16))
+        layout.addWidget(resultado_label)
+
+        figura = Figure()
+        self.canvas = FigureCanvas(figura)
+        layout.addWidget(self.canvas)
+
+        ax1 = figura.add_subplot(121)
+        ax1.hist(self.areas_estimadas, bins=30, edgecolor='black', alpha=0.7)
+        ax1.set_title('Histograma de áreas estimadas')
+        ax1.set_xlabel('Áreas estimadas')
+        ax1.set_ylabel('Frecuencia')
+        ax1.grid(True)
+
+        ax2 = figura.add_subplot(122)
+        ax2.plot(self.x_vals, self.y_vals, label='f(x)', color='blue')
+        ax2.set_title('Gráfica de la Función')
+        ax2.set_xlabel('x')
+        ax2.set_ylabel('f(x)')
+        ax2.grid(True)
+        self.canvas.draw()
+    
 class CalculadoraMonteCarlo(QWidget):
     def __init__(self):
         super().__init__()
@@ -30,14 +72,14 @@ class CalculadoraMonteCarlo(QWidget):
         # Validadores para asegurarse de que solo se introduzcan números
         double_validator = QDoubleValidator()
 
-        self.limite_inferior_input = QLineEdit()
-        self.limite_inferior_input.setPlaceholderText("Lí. infe.")
-        self.limite_inferior_input.setFixedWidth(100)
-        self.limite_inferior_input.setFont(QFont("Arial", 14))
-        self.limite_inferior_input.setAlignment(Qt.AlignCenter)
-        self.limite_inferior_input.setStyleSheet("background-color: white;")
-        self.limite_inferior_input.setValidator(double_validator)
-        integration_layout2.addWidget(self.limite_inferior_input)
+        self.limite_superior_input = QLineEdit()
+        self.limite_superior_input.setPlaceholderText("Lí. supe.")
+        self.limite_superior_input.setFixedWidth(100)
+        self.limite_superior_input.setFont(QFont("Arial", 14))
+        self.limite_superior_input.setAlignment(Qt.AlignCenter)
+        self.limite_superior_input.setStyleSheet("background-color: white;")
+        self.limite_superior_input.setValidator(double_validator)
+        integration_layout2.addWidget(self.limite_superior_input)
         
         integral_label = QLabel("∫")
         integral_label.setStyleSheet("font-size: 120px; background-color: lightblue;")
@@ -60,14 +102,14 @@ class CalculadoraMonteCarlo(QWidget):
         caja_funcion.addWidget(dx_label)
         integration_layout2.addLayout(caja_funcion)
         
-        self.limite_superior_input = QLineEdit()
-        self.limite_superior_input.setPlaceholderText("Lí. supe.")
-        self.limite_superior_input.setFont(QFont("Arial", 14))
-        self.limite_superior_input.setFixedWidth(100)
-        self.limite_superior_input.setAlignment(Qt.AlignCenter)
-        self.limite_superior_input.setStyleSheet("background-color: white;")
-        self.limite_superior_input.setValidator(double_validator)
-        integration_layout2.addWidget(self.limite_superior_input)
+        self.limite_inferior_input = QLineEdit()
+        self.limite_inferior_input.setPlaceholderText("Lí. infe.")
+        self.limite_inferior_input.setFont(QFont("Arial", 14))
+        self.limite_inferior_input.setFixedWidth(100)
+        self.limite_inferior_input.setAlignment(Qt.AlignCenter)
+        self.limite_inferior_input.setStyleSheet("background-color: white;")
+        self.limite_inferior_input.setValidator(double_validator)
+        integration_layout2.addWidget(self.limite_inferior_input)
         
         integration_layout.setContentsMargins(1, 1, 1, 25)
         principal.addLayout(integration_layout)
@@ -103,9 +145,9 @@ class CalculadoraMonteCarlo(QWidget):
         text = sender.text()
         
         if text == 'Borrar':
-            self.funcion.clear()
-            self.limite_inferior_input.clear()
-            self.limite_superior_input.clear()
+            current_text = self.funcion.text()
+            if current_text:
+                self.funcion.setText(current_text[:-1])
         elif text == 'Calcular':
             self.interpretar()
         else:
@@ -118,24 +160,65 @@ class CalculadoraMonteCarlo(QWidget):
         
         try:
             expr = self.funcion.text()
-            print(expr)
-
             limite_inferior = float(self.limite_inferior_input.text())
             limite_superior = float(self.limite_superior_input.text())
+
+            print(expr) 
+
+            replacements = {
+                '√': 'np.sqrt',
+                '÷': '/',
+                '×': '*',
+                '^': '**',
+                'X': 'x',
+                'sin': 'np.sin',
+                'cos': 'np.cos',
+                'tan': 'np.tan',
+                'log': 'np.log10',
+                'ln': 'np.log',
+                'e': 'np.exp',
+                'π': 'np.pi'
+            }
             
-            print(limite_inferior)
-            print(limite_superior)
+            for key, value in replacements.items():
+                expr = expr.replace(key, value)
 
+            print(expr) 
+            # Define la función que será integrada
+            def f(x):
+                return eval(expr)
+
+            # Método de Monte Carlo
+            N = 10000
+            num_repeticiones = 1000
+            areas_estimadas = []
+
+            for _ in range(num_repeticiones):
+                x_random = np.random.uniform(limite_inferior, limite_superior, N)
+                f_values = f(x_random)
+                f_mean = np.mean(f_values)
+                integral_estimate = (limite_superior - limite_inferior) * f_mean
+                areas_estimadas.append(integral_estimate)
+
+            integral = np.mean(areas_estimadas)
+
+            # Muestra la gráfica en una nueva ventana
+            x_vals = np.linspace(limite_inferior, limite_superior, 1000)
+            y_vals = f(x_vals)
+            self.mostrar_grafica(integral, x_vals, y_vals, areas_estimadas)
+            
         except Exception as e:
-            self.mostrar_mensaje_error("Error en los límites: asegúrese de ingresar solo números.")
-            self.funcion.setText("")
-
+            self.funcion.setText("Error")
     def mostrar_mensaje_error(self, mensaje):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Warning)
         msg.setWindowTitle("Advertencia")
         msg.setText(mensaje)
         msg.exec_()
+
+    def mostrar_grafica(self, resultado, x_vals, y_vals, areas_estimadas):
+        self.grafica_window = GraficaWindow(resultado, x_vals, y_vals, areas_estimadas)
+        self.grafica_window.show()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

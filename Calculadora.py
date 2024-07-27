@@ -37,20 +37,20 @@ class CalculadoraMonteCarlo(QWidget):
         integral_label.setStyleSheet("font-size: 120px;")
         integration_layout.addWidget(integral_label)
         
-        funcion = QHBoxLayout()
+        caja_funcion = QHBoxLayout()
         self.resultado_display = QLineEdit()
         self.resultado_display.setFont(QFont("Arial", 20))
         self.resultado_display.setPlaceholderText("f(x)")
-        self.resultado_display.setAlignment(Qt.AlignCenter) 
-        funcion.addWidget(self.resultado_display)
-        integration_layout2.addLayout(funcion)
+        self.resultado_display.setAlignment(Qt.AlignCenter)
+        caja_funcion.addWidget(self.resultado_display)
+        integration_layout2.addLayout(caja_funcion)
 
         dx_label = QLabel("dx")
         dx_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         dx_label.setMargin(10)
         dx_label.setSizePolicy(10, 0)
-        funcion.addWidget(dx_label)
-        integration_layout2.addLayout(funcion)
+        caja_funcion.addWidget(dx_label)
+        integration_layout2.addLayout(caja_funcion)
         
         self.limite_superior_input = QLineEdit()
         self.limite_superior_input.setPlaceholderText("Lí. supe.")
@@ -67,14 +67,13 @@ class CalculadoraMonteCarlo(QWidget):
         grid_layout = QGridLayout()
         
         botones = [
-            ('sin', 0, 0), ('cos', 0, 1), ('tan', 0, 2), ('(', 0, 3),
-            ('√', 1, 0), ('ln', 1, 1), ('log', 1, 2), (')', 1, 3),
-            ('7', 2, 0), ('8', 2, 1), ('9', 2, 2), ('+', 2, 3),
-            ('4', 3, 0), ('5', 3, 1), ('6', 3, 2), ('÷', 3, 3),
-            ('1', 4, 0), ('2', 4, 1), ('3', 4, 2), ('×', 4, 3),
-            ('0', 5, 1), ('π', 5, 2), ('-', 5, 3),
-            ('^', 5, 0), ('e', 5, 1),
-            ('Calcular', 6, 0, 1, 2), ('Borrar', 6, 2, 1, 2)
+            ('sin', 0, 0), ('cos', 0, 1), ('tan', 0, 2), ('e', 0, 3),
+            ('√', 1, 0), ('^', 1, 1), ('log', 1, 2), ('ln', 1, 3),
+            ('7', 2, 0), ('8', 2, 1), ('9', 2, 2), ('π', 2, 3),
+            ('4', 3, 0), ('5', 3, 1), ('6', 3, 2), ('-', 3, 3),
+            ('1', 4, 0), ('2', 4, 1), ('3', 4, 2), ('÷', 4, 3),
+            ('(', 5, 0), ('0', 5, 1), (')', 5, 2), ('×', 5, 3),
+            ('X', 6, 0), ('Calcular', 6, 1), ('Borrar', 6, 2), ('+', 6, 3)
         ]
         
         for btn_text, row, col, rowspan, colspan in [(b[0], b[1], b[2], 1, 1) if len(b) == 3 else b for b in botones]:
